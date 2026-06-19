@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Live Bible Verse Clock</title>
+
+<style>
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body{
+    background:#000;
+    color:#fff;
+    font-family:Georgia, serif;
+    height:100vh;
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+    align-items:center;
+    text-align:center;
+    padding:30px;
+}
+
+#cross{
+    font-size:7rem;
+    margin-bottom:20px;
+}
+
+#clock{
+    font-size:4rem;
+    font-weight:900;
+    margin-bottom:40px;
+}
+
+#verse{
+    font-size:clamp(2rem,4vw,4rem);
+    font-weight:900;
+    line-height:1.5;
+    max-width:1200px;
+}
+
+#reference{
+    margin-top:20px;
+    font-size:2rem;
+    color:#ccc;
+}
+
+#status{
+    position:absolute;
+    bottom:10px;
+    opacity:.25;
+    font-size:.8rem;
+}
+</style>
+</head>
+<body>
+
+<div id="cross">✝</div>
+
+<div id="clock"></div>
+
+<div id="verse">Loading verse...</div>
+<div id="reference"></div>
+
+<div id="status">Updates every 5 minutes</div>
+
+<script>
+
+const fallbackVerses = [
+{
+text:"The Lord is my shepherd; I shall not want.",
+ref:"Psalm 23:1"
+},
+{
+text:"I can do all things through Christ who strengthens me.",
+ref:"Philippians 4:13"
+},
+{
+text:"Trust in the Lord with all your heart.",
+ref:"Proverbs 3:5"
+}
+];
+
+function updateClock() {
+    const now = new Date();
+
+    document.getElementById("clock").textContent =
+        now.toLocaleTimeString([],{
+            hour:'numeric',
+            minute:'2-digit',
+            second:'2-digit'
+        });
+}
+
+async function loadVerse() {
+
+    try {
+
+        const response =
+            await fetch("https://beta.ourmanna.com/api/v1/get/?format=json");
+
+        const data = await response.json();
+
+        const verse =
+            data.verse.details.text;
+
+        const reference =
+            data.verse.details.reference;
+
+        document.getElementById("verse").textContent =
+            `"${verse}"`;
+
+        document.getElementById("reference").textContent =
+            reference;
+
+    } catch(error) {
+
+        const random =
+            fallbackVerses[Math.floor(Math.random()*fallbackVerses.length)];
+
+        document.getElementById("verse").textContent =
+            `"${random.text}"`;
+
+        document.getElementById("reference").textContent =
+            random.ref;
+    }
+}
+
+updateClock();
+setInterval(updateClock,1000);
+
+loadVerse();
+setInterval(loadVerse,300000);
+
+document.addEventListener("click", async () => {
+    if (!document.fullscreenElement) {
+        try {
+            await document.documentElement.requestFullscreen();
+        } catch(e){}
+    }
+});
+
+</script>
+
+</body>
+</html>
